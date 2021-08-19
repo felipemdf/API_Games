@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Store</title>
+</head>
+<style>
+    body{margin: 0px;}
+    .header {
+        margin-top: 0px;
+        background-color: gray;    
+        text-align: center;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    .content{
+        padding-left: 20px;
+        padding-top: 10px;
+    }
+</style>
+<body>
+
+    <div class="header">
+        <h2>Login</h4>
+    </div>
+    <div class="content">
+        <input type="text" name="email" id="email" placeholder="email@gmail.com"><br>
+        <input type="password" name="password" id="password" placeholder="**********">
+        <button onclick="login()">Sign In</button>
+    </div>
+    <hr>
+
+    <div class="header">
+        <h2>Game List</h4>
+    </div>
+    <div class="content">
+        <ul id="games"></ul>
+    </div>
+    <hr>
+
+    <div class="header">
+        <h2>Save Game</h4>
+    </div>
+    <div class="content">
+        <input type="text" name="title" id="title" placeholder="Title"><br>
+        <input type="number" name="year" id="year" placeholder="Year"><br>
+        <input type="number" name="price" id="price" placeholder="Price"><br>
+        <button type="button" onclick="createGame()">New</button>
+    </div>
+    <hr>
+
+
+    <div class="header">
+        <h2>Edit Games</h4>
+    </div>
+    <div class="content">
+        <input type="text" name="idEdit" id="idEdit" placeholder="ID" readonly><br>
+        <input type="text" name="titleEdit" id="titleEdit" placeholder="Title"><br>
+        <input type="number" name="yearEdit" id="yearEdit" placeholder="Year"><br>
+        <input type="number" name="priceEdit" id="priceEdit" placeholder="Price"><br>
+        <button type="button" onclick="updateGame()">Update</button>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+
+    function login(){
+        var email = document.getElementById("email").value;
+        var password = document.getElementById("password").value;
+        
+        axios.post("http://localhost:8080/auth",{
+            email,
+            password
+        }).then(res => {
+            var token = res.data.token;
+            localStorage.setItem("token",token); //salva o token na memoria do navegador
+            axiosConfig.headers.Authorization = "Bearer " + localStorage.getItem("token");
+        }).catch(err => {
+            alert("Login incorreto");
+        })
+    }
+
+    var axiosConfig = {
+        headers: {
+            Authorization: "Bearer " + localStorage.getItem("token")
+        }
+    }
+
+    //ROUTS
+    axios.get('http://localhost:8080/games',axiosConfig).then(response =>{
+       let retorno = response.data;
+       var list = document.getElementById("games");
+
+       retorno.games.forEach(game => {
+           var item = document.createElement("li");
+           var deleteBtn = document.createElement("button");
+           var editBtn = document.createElement("button");
+
+           item.setAttribute("data-id",game.id);
+           item.setAttribute("data-title",game.title);
+           item.setAttribute("data-year",game.year);
+           item.setAttribute("data-price",game.price);
+
+           item.innerHTML = game.id + " - " + game.title + " -  R$" + game.price;
+           
+           deleteBtn.innerHTML = "Delete";
+           deleteBtn.addEventListener("click", function(){deleteGame(item)})
+           
+           editBtn.innerHTML = "Edit";
+           editBtn.addEventListener("click", function(){loadForm(item)})
+           
+           item.appendChild(deleteBtn);
+           item.appendChild(editBtn);
+           list.appendChild(item);
+       });
+    }).catch(err => {
+        console.log(err);
+    });
+
+    function createGame(){
+        var titleInput = document.getElementById("title");
+        var yearInput = document.getElementById("year");
+        var priceInput = document.getElementById("price");
+        
+        var game = {
+            title: titleInput.value,
+            year: yearInput.value,
+            price: priceInput.value
+        }
+
+        axios.post("http://localhost:8080/game",game,axiosConfig).then(response => {
+            if(response.status == 200){ 
+                alert("Game has been saved");
+            }
+            location.reload();
+        }).catch(err => {console.log(err);})
+    }
+
+    function deleteGame(listItem){
+        var id = listItem.getAttribute("data-id");
+        
+        axios.delete('http://localhost:8080/game/' +id,axiosConfig).then(response => {
+            alert("Game has been deleted")
+            location.reload();
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
+    function loadForm(listItem){
+        var id = listItem.getAttribute("data-id");
+        var title = listItem.getAttribute("data-title");
+        var year = listItem.getAttribute("data-year");
+        var price = listItem.getAttribute("data-price");
+        document.getElementById("idEdit").value = id;
+        document.getElementById("titleEdit").value = title;
+        document.getElementById("yearEdit").value = year;
+        document.getElementById("priceEdit").value = price;
+        };
+
+    function updateGame(){
+        var idInput = document.getElementById("idEdit");
+        var titleInput = document.getElementById("titleEdit");
+        var yearInput = document.getElementById("yearEdit");
+        var priceInput = document.getElementById("priceEdit");
+        var id = idInput.value;
+        var game = {
+            title: titleInput.value,
+            year: yearInput.value,
+            price: priceInput.value
+        }
+
+        axios.put("http://localhost:8080/game/"+id,game,axiosConfig).then(response => {
+            if(response.status == 200){ 
+                alert("Game has been update");
+            }
+            location.reload();
+        }).catch(err => {console.log(err);})
+    }
+</script>
+</html>

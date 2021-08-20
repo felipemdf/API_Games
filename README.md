@@ -50,8 +50,8 @@ Exemplo de resposta:
 ### POST /auth
 Responsável por fazer o processo de login.
 #### Parâmetros
-Email: e-mail do usuário cadastrado no sistema.
-Password: senha do usuário cadastrado no sistema.
+email: e-mail do usuário cadastrado no sistema.
+password: senha do usuário cadastrado no sistema.
 ```
 {
 	"email":"programadorteste@gmail.com",
